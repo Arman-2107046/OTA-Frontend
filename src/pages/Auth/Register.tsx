@@ -1,12 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AppContext } from "/src/Context/AppContext";
 
 type ValidationErrors = {
   [key: string]: string[];
 };
 
 const Register = () => {
+
+  const {setToken}=useContext(AppContext);
 
 
   const navigate=useNavigate();
@@ -22,50 +24,41 @@ const Register = () => {
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   async function handleRegister(e: React.FormEvent) {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+  try {
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
 
-      let data: any;
+    const data = await res.json();
 
-      try {
-        data = await res.json();
-      } catch (err) {
-        console.error("Response is not valid JSON", err);
-        return;
+    // ❌ Failed (422 validation or others)
+    if (!res.ok) {
+      if (data?.errors) {
+        setErrors(data.errors);
       }
-
-      if (!res.ok) {
-        // Laravel validation errors (422)
-        if (data?.errors) {
-          setErrors(data.errors);
-        }
-        else{
-
-          localStorage.setItem('token',data.token);
-
-          navigate('/');
-          console.log(data)
-        }
-      }
-
-      // success
-      setErrors({});
-      console.log("Registered successfully:", data);
-      // redirect or set auth here
-
-    } catch (err) {
-      console.error("Network or server error:", err);
+      return;
     }
+
+    // ✅ Successful Register
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+    setErrors({});
+    // console.log("Registered successfully:", data);
+              navigate('/');
+
+
+  } catch (err) {
+    console.error("Network or server error:", err);
   }
+}
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -73,6 +66,8 @@ const Register = () => {
         <h1 className="text-2xl font-semibold text-center text-gray-800 mb-6">
           Create an Account
         </h1>
+
+        {/* <h1>{token}</h1> */}
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
