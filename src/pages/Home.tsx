@@ -1,8 +1,13 @@
+import Hero from "../components/Hero"
 
 const Home = () => {
   return (
     <div>
-      Hello From Home
+      <Hero/>
+
+      <section className="h-screen">
+
+      </section>
     </div>
   )
 }
